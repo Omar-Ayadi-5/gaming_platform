@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<!-- ================================================================
+     FILE: index.html
+     PURPOSE: Single-page application (SPA) shell for the Esports Platform.
+              All "pages" exist as <section> elements hidden/shown by JS.
+              No PHP logic here — this is purely the frontend structure.
+     LINKED TO: style.css (all visual styles)
+                script.js (all SPA navigation, data fetching, DOM updates)
+                api.php   (all data calls go here via fetch())
+     ================================================================ -->
+<html lang="en">
+<head>
+    <!-- Character encoding — must be first meta tag for proper Unicode support -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive viewport — essential for mobile layout -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Browser tab title -->
+    <title>GGNexus — Esports Talent Platform</title>
+
+    <!-- Favicon using an emoji for simplicity -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+
+    <!-- Main stylesheet — all CSS for the entire application -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- ================================================================
+     AUTH WRAPPER
+     Shown when user is NOT logged in (login/register forms).
+     Hidden once the user has an active session.
+     ================================================================ -->
+<div id="auth-wrapper" class="auth-wrapper">
+    <div class="auth-card">
+
+        <!-- Brand Logo -->
+        <div class="auth-logo">
+            <h1>🎮 GGNexus</h1>
+            <p>Find your team. Build your legacy.</p>
+        </div>
+
+        <!-- Tab Buttons to switch between Login and Register forms -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+            <button class="auth-tab"        onclick="showAuthTab('register')">Register</button>
+        </div>
+
+        <!-- ── Login Form ───────────────────────────────────────────── -->
+        <!-- id="login-form" is targeted by script.js -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+
+            <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" placeholder="you@esports.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+
+            <!-- Error message placeholder — shown by JS on failed login -->
+            <p id="login-error" class="text-red text-sm mb-16 hidden"></p>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                🚀 Enter the Arena
+            </button>
+
+            <!-- Demo credentials hint for testing -->
+            <p class="text-sm text-muted mt-16" style="text-align:center">
+                Demo: player@esports.com / password
+            </p>
+        </form>
+
+        <!-- ── Register Form ─────────────────────────────────────────── -->
+        <!-- Hidden by default — shown when user clicks "Register" tab -->
+        <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+
+            <div class="form-group">
+                <label for="reg-username">Username</label>
+                <input type="text" id="reg-username" placeholder="YourGamerTag" required
+                       minlength="3" maxlength="50">
+            </div>
+
+            <div class="form-group">
+                <label for="reg-email">Email Address</label>
+                <input type="email" id="reg-email" placeholder="you@esports.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-password">Password</label>
+                <input type="password" id="reg-password" placeholder="Min. 6 characters" required
+                       minlength="6">
+            </div>
+
+            <!-- Role selector — determines profile type and permissions -->
+            <div class="form-group">
+                <label for="reg-role">I am a...</label>
+                <select id="reg-role" required>
+                    <option value="">— Select your role —</option>
+                    <option value="PLAYER">🎮 Player — I compete and want to get scouted</option>
+                    <option value="COACH">📋 Coach — I train and develop players</option>
+                    <option value="MANAGER">🏆 Manager — I recruit and run a team</option>
+                </select>
+            </div>
+
+            <!-- Error message placeholder -->
+            <p id="register-error" class="text-red text-sm mb-16 hidden"></p>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                ⚡ Create Account
+            </button>
+        </form>
+
+    </div><!-- /.auth-card -->
+</div><!-- /#auth-wrapper -->
+
+
+<!-- ================================================================
+     MAIN APP WRAPPER
+     Everything below is hidden until the user is authenticated.
+     script.js shows this div after successful login/register.
+     ================================================================ -->
+<div id="app-wrapper" class="app-container hidden">
+
+    <!-- ── Sidebar Navigation ───────────────────────────────────── -->
+    <aside class="sidebar">
+
+        <!-- Brand name -->
+        <div class="sidebar-logo">
+            <span>🎮 GGNexus</span>
+        </div>
+
+        <!-- Navigation items — each calls navigateTo('sectionId') in JS -->
+        <nav class="sidebar-nav">
+
+            <div class="nav-item active" onclick="navigateTo('dashboard')" id="nav-dashboard">
+                <span class="icon">🏠</span>
+                <span>Dashboard</span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('feed')" id="nav-feed">
+                <span class="icon">📰</span>
+                <span>Feed</span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('profile')" id="nav-profile">
+                <span class="icon">👤</span>
+                <span>My Profile</span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('players')" id="nav-players">
+                <span class="icon">🔎</span>
+                <span>Find Players</span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('recruitment')" id="nav-recruitment">
+                <span class="icon">🎯</span>
+                <span>Recruitment</span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('messages')" id="nav-messages">
+                <span class="icon">💬</span>
+                <span>Messages</span>
+                <!-- Unread badge — shown by JS when there are unread messages -->
+                <span class="nav-badge hidden" id="msg-badge"></span>
+            </div>
+
+            <div class="nav-item" onclick="navigateTo('notifications')" id="nav-notifications">
+                <span class="icon">🔔</span>
+                <span>Notifications</span>
+                <!-- Unread notification count badge -->
+                <span class="nav-badge hidden" id="notif-badge"></span>
+            </div>
+
+        </nav>
+
+        <!-- Current user info at the bottom of the sidebar -->
+        <div class="sidebar-user" onclick="navigateTo('profile')">
+            <!-- Avatar src is replaced by JS with the actual avatar URL -->
+            <img src="assets/uploads/avatars/default.png" alt="Avatar"
+                 class="user-avatar" id="sidebar-avatar">
+            <div class="user-info">
+                <!-- These spans are filled in by JS after fetching user data -->
+                <span class="user-name"  id="sidebar-username">Loading...</span>
+                <span class="user-role"  id="sidebar-role">—</span>
+            </div>
+        </div>
+
+    </aside><!-- /.sidebar -->
+
+
+    <!-- ── Main Content ─────────────────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- ============================================================
+             SECTION: Dashboard
+             First page after login. Shows a quick-stats summary.
+             ============================================================ -->
+        <section id="section-dashboard" class="page-section active">
+
+            <div class="page-header">
+                <h2 class="page-title">Welcome back, <span id="dash-username">Gamer</span> 👋</h2>
+                <!-- Logout button in the top-right of dashboard -->
+                <button class="btn btn-ghost btn-sm" onclick="handleLogout()">🚪 Logout</button>
+            </div>
+
+            <!-- Quick stat cards row -->
+            <div class="grid-3 mb-24" id="dash-stats">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Quick links row -->
+            <div class="grid-3">
+                <div class="card card-hover" onclick="navigateTo('feed')" style="cursor:pointer">
+                    <div style="font-size:2rem; margin-bottom:12px;">📰</div>
+                    <h3 class="mb-16">Social Feed</h3>
+                    <p class="text-secondary text-sm">Share clips, updates, and connect with the esports community.</p>
+                </div>
+                <div class="card card-hover" onclick="navigateTo('recruitment')" style="cursor:pointer">
+                    <div style="font-size:2rem; margin-bottom:12px;">🎯</div>
+                    <h3 class="mb-16">Recruitment</h3>
+                    <p class="text-secondary text-sm">Browse open team offers or post a position for your org.</p>
+                </div>
+                <div class="card card-hover" onclick="navigateTo('messages')" style="cursor:pointer">
+                    <div style="font-size:2rem; margin-bottom:12px;">💬</div>
+                    <h3 class="mb-16">Messages</h3>
+                    <p class="text-secondary text-sm">Direct message players, coaches, and managers.</p>
+                </div>
+            </div>
+
+        </section><!-- /#section-dashboard -->
+
+
+        <!-- ============================================================
+             SECTION: Feed
+             Twitter-style public timeline of posts.
+             ============================================================ -->
+        <section id="section-feed" class="page-section">
+
+            <div class="page-header">
+                <h2 class="page-title">The <span>Feed</span></h2>
+            </div>
+
+            <div class="feed-grid">
+
+                <!-- Compose new post card (hidden for managers by JS) -->
+                <div class="compose-card" id="compose-card">
+                    <textarea id="compose-text" placeholder="What's on your mind? Share a highlight, update, or clip..."></textarea>
+
+                    <!-- Row of compose action controls -->
+                    <div class="compose-actions">
+                        <div class="flex gap-8">
+                            <!-- Post type selector — TEXT, IMAGE, or CLIP -->
+                            <select id="compose-type" style="width:auto; padding: 8px 12px;">
+                                <option value="TEXT">📝 Text</option>
+                                <option value="IMAGE">🖼️ Image</option>
+                                <option value="CLIP">🎬 Clip</option>
+                            </select>
+
+                            <!-- File input for media attachment (image or video) -->
+                            <!-- accept attribute limits what files the user can pick -->
+                            <input type="file" id="compose-media"
+                                   accept="image/*,video/*"
+                                   style="display:none">
+
+                            <!-- Label acts as a styled button to trigger the hidden file input -->
+                            <label for="compose-media" class="btn btn-ghost btn-sm"
+                                   id="attach-label" style="display:none">
+                                📎 Attach
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary btn-sm" onclick="submitPost()">
+                            🚀 Post
+                        </button>
+                    </div>
+                </div><!-- /.compose-card -->
+
+                <!-- Posts are dynamically injected here by JS -->
+                <div id="feed-posts">
+                    <div class="spinner"></div>
+                </div>
+
+                <!-- Load more button — hidden until JS detects more posts available -->
+                <button class="btn btn-ghost" id="load-more-btn"
+                        onclick="loadMorePosts()" style="display:none">
+                    Load more posts
+                </button>
+
+            </div><!-- /.feed-grid -->
+
+        </section><!-- /#section-feed -->
+
+
+        <!-- ============================================================
+             SECTION: My Profile
+             Shows the current user's full profile with tabs.
+             ============================================================ -->
+        <section id="section-profile" class="page-section">
+
+            <!-- Banner image at the top -->
+            <img src="assets/uploads/banners/default.jpg"
+                 class="profile-banner" id="profile-banner" alt="Profile banner">
+
+            <!-- Profile info card -->
+            <div class="profile-info">
+                <!-- Large circular avatar -->
+                <img src="assets/uploads/avatars/default.png"
+                     class="profile-avatar" id="profile-avatar" alt="Profile avatar">
+
+                <!-- Name + role badge row -->
+                <div class="flex-center gap-12" style="flex-wrap:wrap; margin-top:12px">
+                    <h2 class="profile-name" id="profile-name">Loading...</h2>
+                    <span class="profile-role-badge" id="profile-role-badge">—</span>
+                </div>
+
+                <!-- Bio text -->
+                <p class="profile-bio" id="profile-bio">No bio yet.</p>
+
+                <!-- Action buttons row -->
+                <div class="profile-actions">
+                    <button class="btn btn-primary btn-sm" onclick="openEditProfile()">
+                        ✏️ Edit Profile
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openUploadAvatar()">
+                        📷 Change Avatar
+                    </button>
+                </div>
+
+                <!-- Stats bar -->
+                <div class="profile-stats" id="profile-stats">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Profile content tabs (only visible for own profile) -->
+            <div class="flex gap-8 mb-16" id="profile-tabs">
+                <button class="btn btn-primary btn-sm"  onclick="showProfileTab('stats')">📊 Stats</button>
+                <button class="btn btn-ghost btn-sm"    onclick="showProfileTab('clips')">🎬 Clips</button>
+                <button class="btn btn-ghost btn-sm"    onclick="showProfileTab('career')">🏆 Career</button>
+                <button class="btn btn-ghost btn-sm"    onclick="showProfileTab('ratings')">⭐ Reviews</button>
+                <button class="btn btn-ghost btn-sm"    onclick="showProfileTab('applications')">📋 Applications</button>
+            </div>
+
+            <!-- Tab: Stats & Game Accounts -->
+            <div id="tab-stats">
+                <div class="flex-center gap-12 mb-16" style="justify-content:space-between; flex-wrap:wrap">
+                    <h3>Game Accounts</h3>
+                    <!-- Only shown to PLAYER role by JS -->
+                    <button class="btn btn-secondary btn-sm hidden" id="add-account-btn"
+                            onclick="openAddAccount()">
+                        + Link Account
+                    </button>
+                </div>
+                <!-- Game account cards injected here by JS -->
+                <div class="grid-2" id="game-accounts-grid">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Clips Gallery (hidden by default) -->
+            <div id="tab-clips" class="hidden">
+                <div class="flex-center gap-12 mb-16" style="justify-content:space-between; flex-wrap:wrap">
+                    <h3>Gameplay Clips</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="openUploadClip()">
+                        🎬 Upload Clip
+                    </button>
+                </div>
+                <div class="grid-3" id="clips-grid">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Career History (hidden by default) -->
+            <div id="tab-career" class="hidden">
+                <div class="flex-center gap-12 mb-16" style="justify-content:space-between; flex-wrap:wrap">
+                    <h3>Career Background</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="openAddBackground()">
+                        + Add Entry
+                    </button>
+                </div>
+                <div id="career-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Reviews / Ratings (hidden by default) -->
+            <div id="tab-ratings" class="hidden">
+                <h3 class="mb-16">Player Reviews</h3>
+                <div id="ratings-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Tab: My Applications (hidden by default) -->
+            <div id="tab-applications" class="hidden">
+                <h3 class="mb-16">My Applications</h3>
+                <div id="my-applications-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+        </section><!-- /#section-profile -->
+
+
+        <!-- ============================================================
+        <!-- ============================================================
+             SECTION: Find Players
+             Search/scout player profiles by game, region, role, and rating.
+             ============================================================ -->
+        <section id="section-players" class="page-section">
+
+            <div class="page-header">
+                <h2 class="page-title">Find <span>Players</span></h2>
+            </div>
+
+            <div class="card mb-24">
+                <div class="grid-3" style="gap:12px; align-items:end">
+                    <div class="form-group" style="margin:0">
+                        <label>Search</label>
+                        <input type="text" id="player-search" placeholder="Username or nickname">
+                    </div>
+                    <div class="form-group" style="margin:0">
+                        <label>Game</label>
+                        <input type="text" id="player-game" placeholder="e.g. Valorant">
+                    </div>
+                    <div class="form-group" style="margin:0">
+                        <label>Region</label>
+                        <input type="text" id="player-region" placeholder="e.g. EUW">
+                    </div>
+                </div>
+                <div class="grid-3 mt-16" style="gap:12px; align-items:end">
+                    <div class="form-group" style="margin:0">
+                        <label>Main Role</label>
+                        <input type="text" id="player-role" placeholder="e.g. Duelist, Support">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadPlayers()">🔍 Search Players</button>
+                    <button class="btn btn-ghost" onclick="clearPlayerFilters()">Reset</button>
+                </div>
+            </div>
+
+            <div class="offers-grid" id="players-grid">
+                <div class="spinner"></div>
+            </div>
+
+        </section><!-- /#section-players -->
+
+             SECTION: Recruitment
+             Browse team offers (all roles) / Create offers (managers only).
+             ============================================================ -->
+        <section id="section-recruitment" class="page-section">
+
+            <div class="page-header">
+                <h2 class="page-title">Recruitment <span>Hub</span></h2>
+                <!-- Only visible to MANAGER role — shown by JS -->
+                <button class="btn btn-primary btn-sm hidden" id="create-offer-btn"
+                        onclick="openCreateOffer()">
+                    + Post Offer
+                </button>
+            </div>
+
+            <!-- Filter bar -->
+            <div class="card mb-24">
+                <div class="grid-3" style="gap:12px; align-items:end">
+                    <div class="form-group" style="margin:0">
+                        <label>Filter by Game</label>
+                        <input type="text" id="filter-game" placeholder="e.g. Valorant">
+                    </div>
+                    <div class="form-group" style="margin:0">
+                        <label>Filter by Role</label>
+                        <input type="text" id="filter-role" placeholder="e.g. Support">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadOffers()">🔍 Search</button>
+                </div>
+            </div>
+
+            <!-- Offer cards grid — populated by JS -->
+            <div class="offers-grid" id="offers-grid">
+                <div class="spinner"></div>
+            </div>
+
+        </section><!-- /#section-recruitment -->
+
+
+        <!-- ============================================================
+             SECTION: Messages
+             Two-panel chat interface: conversation list + message thread.
+             ============================================================ -->
+        <section id="section-messages" class="page-section">
+
+            <div class="page-header">
+                <h2 class="page-title">Direct <span>Messages</span></h2>
+            </div>
+
+            <!-- Two-panel layout (CSS grid) -->
+            <div class="messages-layout">
+
+                <!-- Left panel: list of conversations -->
+                <div class="conversations-panel">
+                    <div class="conversations-header">💬 Conversations</div>
+                    <div class="conversations-list" id="conversations-list">
+                        <!-- Conversation items injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Right panel: chat messages + input -->
+                <div class="chat-panel" id="chat-panel">
+
+                    <!-- Chat header (username + avatar of the other person) -->
+                    <div class="chat-header" id="chat-header">
+                        <div class="empty-state" style="padding:20px; text-align:center; width:100%">
+                            <p class="text-muted">Select a conversation to start chatting</p>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable message bubbles area -->
+                    <div class="chat-messages" id="chat-messages"></div>
+
+                    <!-- Input row — hidden until a conversation is selected -->
+                    <div class="chat-input-row hidden" id="chat-input-row">
+                        <input type="text" id="chat-input"
+                               placeholder="Type a message..."
+                               onkeydown="if(event.key==='Enter') sendMessage()">
+                        <button class="btn btn-primary btn-sm" onclick="sendMessage()">
+                            Send ➤
+                        </button>
+                    </div>
+
+                </div><!-- /.chat-panel -->
+
+            </div><!-- /.messages-layout -->
+
+        </section><!-- /#section-messages -->
+
+
+        <!-- ============================================================
+             SECTION: Notifications
+             List of all notifications for the current user.
+             ============================================================ -->
+        <section id="section-notifications" class="page-section">
+
+            <div class="page-header">
+                <h2 class="page-title">🔔 <span>Notifications</span></h2>
+                <!-- Mark all as read button -->
+                <button class="btn btn-ghost btn-sm" onclick="markAllRead()">
+                    ✓ Mark all read
+                </button>
+            </div>
+
+            <!-- Notification items injected here by JS -->
+            <div class="notifications-list" id="notifications-list">
+                <div class="spinner"></div>
+            </div>
+
+        </section><!-- /#section-notifications -->
+
+    </main><!-- /.main-content -->
+
+</div><!-- /#app-wrapper -->
+
+
+<!-- ================================================================
+     TOAST NOTIFICATION CONTAINER
+     Positioned fixed (bottom-right). JS appends toast divs here.
+     ================================================================ -->
+<div id="toast-container"></div>
+
+
+<!-- ================================================================
+     MODALS
+     All dialogs in the app. Shown/hidden by JS via the .hidden class.
+     ================================================================ -->
+
+<!-- ── Modal: Edit Profile ─────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-edit-profile">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Profile</h3>
+            <button class="modal-close" onclick="closeModal('modal-edit-profile')">×</button>
+        </div>
+        <div class="modal-body">
+            <form onsubmit="submitEditProfile(event)">
+
+                <div class="form-group">
+                    <label>Nickname / Display Name</label>
+                    <input type="text" id="edit-nickname" placeholder="Your display name">
+                </div>
+
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="edit-bio" placeholder="Tell people about yourself..."></textarea>
+                </div>
+
+                <!-- Game field shown for all roles -->
+                <div class="form-group">
+                    <label>Main Game</label>
+                    <input type="text" id="edit-game" placeholder="e.g. Valorant, CS2, PUBG">
+                </div>
+
+                <div class="form-group">
+                    <label>Region</label>
+                    <select id="edit-region">
+                        <option value="">— Select Region —</option>
+                        <option value="MENA">MENA</option>
+                        <option value="EUNE">EUNE</option>
+                        <option value="EUW">EUW</option>
+                        <option value="NA">NA</option>
+                        <option value="BR">Brazil</option>
+                        <option value="SEA">SEA</option>
+                        <option value="OCE">OCE</option>
+                    </select>
+                </div>
+
+                <!-- PLAYER-specific field — shown/hidden by JS based on role -->
+                <div class="form-group" id="field-main-role">
+                    <label>Main Role</label>
+                    <input type="text" id="edit-main-role" placeholder="e.g. Entry Fragger, IGL, Support">
+                </div>
+
+                <!-- COACH-specific field -->
+                <div class="form-group hidden" id="field-positions">
+                    <label>Coaching Positions</label>
+                    <input type="text" id="edit-positions" placeholder="e.g. Tactical Coach, Analyst">
+                </div>
+
+                <!-- MANAGER-specific field -->
+                <div class="form-group hidden" id="field-team-name">
+                    <label>Team Name</label>
+                    <input type="text" id="edit-team-name" placeholder="Your organisation name">
+                </div>
+
+                <div class="flex gap-8" style="justify-content:flex-end">
+                    <button type="button" class="btn btn-ghost"
+                            onclick="closeModal('modal-edit-profile')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Upload Avatar ────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-upload-avatar">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Change Avatar</h3>
+            <button class="modal-close" onclick="closeModal('modal-upload-avatar')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Choose Image (JPG, PNG, GIF, WebP — max 5MB)</label>
+                <!-- File input restricted to image types -->
+                <input type="file" id="avatar-input" accept="image/*">
+            </div>
+            <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeModal('modal-upload-avatar')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAvatar()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Add Game Account ─────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-add-account">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Link Game Account</h3>
+            <button class="modal-close" onclick="closeModal('modal-add-account')">×</button>
+        </div>
+        <div class="modal-body">
+            <form onsubmit="submitAddAccount(event)">
+                <div class="form-group">
+                    <label>Game Name</label>
+                    <input type="text" id="acc-game" placeholder="e.g. Valorant, CS2" required>
+                </div>
+                <div class="form-group">
+                    <label>In-Game Name (IGN)</label>
+                    <input type="text" id="acc-ign" placeholder="YourIGN" required>
+                </div>
+                <div class="form-group">
+                    <label>Tag Line (optional)</label>
+                    <input type="text" id="acc-tag" placeholder="#NA1 or #1234">
+                </div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="acc-platform">
+                        <option value="PC">PC</option>
+                        <option value="PlayStation">PlayStation</option>
+                        <option value="Xbox">Xbox</option>
+                        <option value="Mobile">Mobile</option>
+                    </select>
+                </div>
+
+                <hr class="divider">
+                <p class="text-secondary text-sm mb-16">
+                    Optional: Add your current stats snapshot
+                </p>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Rank</label>
+                        <input type="text" id="acc-rank" placeholder="e.g. Diamond 2">
+                    </div>
+                    <div class="form-group">
+                        <label>Win Rate (%)</label>
+                        <input type="number" id="acc-wr" placeholder="58.5" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Average KDA</label>
+                        <input type="number" id="acc-kda" placeholder="1.85" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Matches Played</label>
+                        <input type="number" id="acc-matches" placeholder="350" min="0">
+                    </div>
+                </div>
+
+                <div class="flex gap-8" style="justify-content:flex-end">
+                    <button type="button" class="btn btn-ghost"
+                            onclick="closeModal('modal-add-account')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Link Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Add Career Background ───────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-add-background">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Add Career Entry</h3>
+            <button class="modal-close" onclick="closeModal('modal-add-background')">×</button>
+        </div>
+        <div class="modal-body">
+            <form onsubmit="submitAddBackground(event)">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="bg-category">
+                        <option value="TEAM">🏆 Team / Roster</option>
+                        <option value="ACHIEVEMENT">🥇 Achievement</option>
+                        <option value="EDUCATION">📚 Education / Training</option>
+                        <option value="OTHER">📌 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Title / Position</label>
+                    <input type="text" id="bg-title" placeholder="e.g. Starter Rifler, Head Coach" required>
+                </div>
+                <div class="form-group">
+                    <label>Organisation / Team</label>
+                    <input type="text" id="bg-org" placeholder="e.g. Team Nexus">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="bg-start">
+                    </div>
+                    <div class="form-group">
+                        <label>End Date (blank if current)</label>
+                        <input type="date" id="bg-end">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="bg-desc" placeholder="Describe your role, achievements, etc."></textarea>
+                </div>
+                <div class="flex gap-8" style="justify-content:flex-end">
+                    <button type="button" class="btn btn-ghost"
+                            onclick="closeModal('modal-add-background')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Upload Clip ──────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-upload-clip">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Upload Gameplay Clip</h3>
+            <button class="modal-close" onclick="closeModal('modal-upload-clip')">×</button>
+        </div>
+        <div class="modal-body">
+            <!-- This form uses multipart/form-data for file upload (set in JS fetch) -->
+            <div class="form-group">
+                <label>Clip Title</label>
+                <input type="text" id="clip-title" placeholder="My insane ace" required>
+            </div>
+            <div class="form-group">
+                <label>Clip Type</label>
+                <select id="clip-type">
+                    <option value="HIGHLIGHT">⚡ Highlight</option>
+                    <option value="ANALYSIS">📊 Analysis</option>
+                    <option value="MONTAGE">🎬 Montage</option>
+                    <option value="OTHER">📌 Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="clip-desc" placeholder="Context, game, patch notes..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Video File (MP4, MOV, WebM — max 100MB)</label>
+                <input type="file" id="clip-file" accept="video/*" required>
+            </div>
+            <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeModal('modal-upload-clip')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitClip()">Upload Clip</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Create Team Offer ───────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-create-offer">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Post Team Offer</h3>
+            <button class="modal-close" onclick="closeModal('modal-create-offer')">×</button>
+        </div>
+        <div class="modal-body">
+            <form onsubmit="submitCreateOffer(event)">
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" id="offer-team" placeholder="Your team name" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Game</label>
+                        <input type="text" id="offer-game" placeholder="Valorant" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Role Needed</label>
+                        <input type="text" id="offer-role" placeholder="Entry Fragger" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description / Requirements</label>
+                    <textarea id="offer-desc"
+                              placeholder="Describe the role, commitment level, requirements, tryout process..."
+                              style="min-height:140px"></textarea>
+                </div>
+                <div class="flex gap-8" style="justify-content:flex-end">
+                    <button type="button" class="btn btn-ghost"
+                            onclick="closeModal('modal-create-offer')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">🚀 Post Offer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: View Offer & Apply ──────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-view-offer">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="view-offer-title">Offer Details</h3>
+            <button class="modal-close" onclick="closeModal('modal-view-offer')">×</button>
+        </div>
+        <div class="modal-body" id="view-offer-body">
+            <!-- Populated by JS when user clicks an offer card -->
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: View Applications for an Offer (Manager) ────────── -->
+<div class="modal-overlay hidden" id="modal-applications">
+    <div class="modal" style="max-width:680px">
+        <div class="modal-header">
+            <h3 class="modal-title">Applications</h3>
+            <button class="modal-close" onclick="closeModal('modal-applications')">×</button>
+        </div>
+        <div class="modal-body" id="modal-applications-body">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Rate a Profile ───────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-rate">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Rate This Player</h3>
+            <button class="modal-close" onclick="closeModal('modal-rate')">×</button>
+        </div>
+        <div class="modal-body">
+            <!-- Hidden input stores profile_id set by JS when modal opens -->
+            <input type="hidden" id="rate-profile-id">
+
+            <div class="form-group">
+                <label>Score (click a star)</label>
+                <!-- Interactive star rating — JS handles selection -->
+                <div class="stars" id="rating-stars">
+                    <span class="star" data-val="1" onclick="selectStar(1)">★</span>
+                    <span class="star" data-val="2" onclick="selectStar(2)">★</span>
+                    <span class="star" data-val="3" onclick="selectStar(3)">★</span>
+                    <span class="star" data-val="4" onclick="selectStar(4)">★</span>
+                    <span class="star" data-val="5" onclick="selectStar(5)">★</span>
+                </div>
+                <!-- Hidden input stores the selected star value -->
+                <input type="hidden" id="rating-score" value="0">
+            </div>
+
+            <div class="form-group">
+                <label>Review Comment (optional)</label>
+                <textarea id="rating-comment" placeholder="What makes them stand out?"></textarea>
+            </div>
+
+            <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeModal('modal-rate')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitRating()">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     MAIN JAVASCRIPT FILE
+     Loaded last so all DOM elements exist when the script runs.
+     defer attribute would also work but src approach keeps files separate.
+     ================================================================ -->
+<script src="script.js"></script>
+
+</body>
+</html>

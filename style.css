@@ -1,0 +1,1305 @@
+/* ================================================================
+   FILE: style.css
+   PURPOSE: Full styling for the Esports Talent & Social Platform
+   LINKED TO: index.html (via <link rel="stylesheet" href="style.css">)
+   THEME: Dark cyber/esports aesthetic — deep charcoal, neon accents
+   FONT: 'Rajdhani' (bold gaming headers) + 'Exo 2' (readable body)
+   ================================================================ */
+
+/* ── Google Fonts import ─────────────────────────────────────── */
+/* Rajdhani: angular, military feel for headings                  */
+/* Exo 2: geometric sci-fi feel for body text                     */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;500;600&display=swap');
+
+/* ── CSS Custom Properties (Design Tokens) ───────────────────── */
+/* Centralised variables — change one value to retheme everything  */
+:root {
+    --bg-primary:    #09090f;   /* Main background — almost black with blue tint */
+    --bg-secondary:  #0f1018;   /* Cards, panels — slightly lighter than primary */
+    --bg-elevated:   #16181f;   /* Hovered cards, dropdowns */
+    --bg-input:      #1a1d28;   /* Form fields */
+
+    --border:        #1e2130;   /* Default border colour */
+    --border-glow:   #00ff88;   /* Neon green border for active/focus states */
+
+    --text-primary:  #e8eaf0;   /* Main readable text — off-white */
+    --text-secondary:#7b8299;   /* Muted/secondary labels */
+    --text-muted:    #4a4f66;   /* Disabled / placeholder text */
+
+    --accent:        #00ff88;   /* Primary neon green accent */
+    --accent-dim:    #00cc6a;   /* Slightly dimmer accent (hover states) */
+    --accent-glow:   rgba(0, 255, 136, 0.15); /* Transparent glow for shadows */
+
+    --indigo:        #6366f1;   /* Secondary accent — electric indigo */
+    --indigo-dim:    #4f52d1;
+    --indigo-glow:   rgba(99, 102, 241, 0.15);
+
+    --red:           #ff4757;   /* Danger / rejected status */
+    --yellow:        #ffd700;   /* Rating stars */
+    --orange:        #ff7043;   /* Pending / warning status */
+
+    --radius:        10px;       /* Default border radius for cards */
+    --radius-lg:     16px;       /* Larger radius for modals */
+    --radius-sm:     6px;        /* Small radius for tags/badges */
+
+    --transition:    0.2s ease;  /* Default transition speed */
+    --shadow:        0 4px 24px rgba(0, 0, 0, 0.5); /* Default card shadow */
+    --shadow-glow:   0 0 20px var(--accent-glow);    /* Neon glow shadow */
+}
+
+/* ── Reset & Base ─────────────────────────────────────────────── */
+/* Remove browser defaults for consistent cross-browser rendering  */
+*, *::before, *::after {
+    box-sizing: border-box;  /* Include padding and border in element dimensions */
+    margin: 0;               /* Remove default margins */
+    padding: 0;              /* Remove default padding */
+}
+
+/* Root HTML element — allows scrolling control */
+html {
+    scroll-behavior: smooth; /* Smooth scroll when jumping to anchors */
+    height: 100%;            /* Full viewport height */
+}
+
+/* Body — main canvas for the entire application */
+body {
+    font-family: 'Exo 2', sans-serif; /* Primary body font */
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;               /* At least full screen height */
+    overflow-x: hidden;              /* No horizontal scrollbar */
+    line-height: 1.6;                /* Comfortable line spacing */
+}
+
+/* Headings — use Rajdhani for all gaming-style headers */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.03em;  /* Slight letter spacing for impact */
+    line-height: 1.2;
+}
+
+/* Anchor tags — remove default underline and browser colour */
+a { color: inherit; text-decoration: none; }
+
+/* Images — prevent overflow outside their containers */
+img { max-width: 100%; display: block; }
+
+/* ── Layout ───────────────────────────────────────────────────── */
+/* .app-container wraps the sidebar + main content area            */
+.app-container {
+    display: flex;         /* Sidebar on left, content on right */
+    min-height: 100vh;     /* Full height layout */
+}
+
+/* ── Auth Pages (Login / Register) ───────────────────────────── */
+/* Centred layout shown before the user logs in                   */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;      /* Vertically centred */
+    justify-content: center;  /* Horizontally centred */
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(0,255,136,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(99,102,241,0.04) 0%, transparent 60%),
+        var(--bg-primary);    /* Subtle neon radial backgrounds */
+    padding: 20px;
+}
+
+/* Auth card container — the white-ish box in the centre */
+.auth-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;        /* Never too wide on large screens */
+    box-shadow: var(--shadow);
+    animation: slideUp 0.4s ease; /* Animate card appearance */
+}
+
+/* Logo / brand area inside auth card */
+.auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+/* Large platform name displayed in auth */
+.auth-logo h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--indigo)); /* Gradient text */
+    -webkit-background-clip: text;  /* Clip gradient to text shape */
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+}
+
+/* Subtitle under the logo */
+.auth-logo p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Tab switcher (Login | Register) inside the auth card */
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 28px;
+}
+
+/* Individual tab button */
+.auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all var(--transition);
+}
+
+/* Active tab gets accent background */
+.auth-tab.active {
+    background: var(--accent);
+    color: #000;             /* Dark text on bright background for contrast */
+}
+
+/* ── Form Styles (shared across auth + profile edit) ────────── */
+/* Label above each input field */
+.form-group {
+    margin-bottom: 20px;     /* Spacing between fields */
+}
+
+label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Text/email/password input fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;            /* Remove default browser focus ring */
+}
+
+/* Glow effect when field is focused */
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow); /* Neon green focus ring */
+}
+
+/* Multi-line textarea */
+textarea {
+    resize: vertical;         /* Only allow vertical resize */
+    min-height: 100px;
+}
+
+/* Dropdown select — custom arrow styling */
+select {
+    appearance: none;         /* Remove OS default dropdown arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b8299' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center; /* Position custom arrow */
+    padding-right: 36px;
+}
+
+/* ── Button Styles ────────────────────────────────────────────── */
+/* Base button — reset browser defaults */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;                 /* Space between icon and text */
+    padding: 11px 22px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;      /* Prevent button text wrapping */
+}
+
+/* Primary neon green button */
+.btn-primary {
+    background: var(--accent);
+    color: #000;
+}
+.btn-primary:hover {
+    background: var(--accent-dim);
+    transform: translateY(-1px);    /* Subtle lift on hover */
+    box-shadow: var(--shadow-glow); /* Neon glow on hover */
+}
+
+/* Secondary outlined button */
+.btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+.btn-secondary:hover {
+    background: var(--accent-glow);
+}
+
+/* Indigo/purple variant */
+.btn-indigo {
+    background: var(--indigo);
+    color: white;
+}
+.btn-indigo:hover {
+    background: var(--indigo-dim);
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px var(--indigo-glow);
+}
+
+/* Danger/delete button */
+.btn-danger {
+    background: var(--red);
+    color: white;
+}
+.btn-danger:hover { filter: brightness(1.1); }
+
+/* Ghost button — no background */
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+}
+.btn-ghost:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+/* Full-width button helper */
+.btn-full { width: 100%; }
+
+/* Small size variant */
+.btn-sm {
+    padding: 7px 14px;
+    font-size: 0.85rem;
+}
+
+/* ── Sidebar Navigation ───────────────────────────────────────── */
+.sidebar {
+    width: 240px;                /* Fixed sidebar width */
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: fixed;             /* Fixed to viewport — always visible */
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;                /* Above main content */
+    transition: transform var(--transition);
+}
+
+/* Brand logo in sidebar */
+.sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.sidebar-logo span {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--indigo));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Navigation list */
+.sidebar-nav {
+    flex: 1;                     /* Take remaining space */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px;
+}
+
+/* Single nav item */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-size: 0.95rem;
+    font-weight: 500;
+    position: relative;         /* For notification badge positioning */
+}
+
+.nav-item:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+/* Active nav item has accent colour + left border indicator */
+.nav-item.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-left: 3px solid var(--accent);
+    padding-left: 11px;          /* Compensate for border width */
+}
+
+/* Icon inside nav item */
+.nav-item .icon {
+    font-size: 1.1rem;
+    width: 22px;                 /* Fixed icon width for alignment */
+    text-align: center;
+}
+
+/* Notification count badge on nav item */
+.nav-badge {
+    position: absolute;
+    right: 10px;
+    background: var(--red);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+/* User info displayed at the bottom of the sidebar */
+.sidebar-user {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+.sidebar-user:hover { background: var(--bg-elevated); }
+
+.sidebar-user .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent); /* Neon green avatar border */
+}
+
+.sidebar-user .user-info span { display: block; }
+.sidebar-user .user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+.sidebar-user .user-role {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Main Content Area ────────────────────────────────────────── */
+.main-content {
+    margin-left: 240px;          /* Push right to clear sidebar */
+    flex: 1;
+    padding: 28px;
+    min-height: 100vh;
+    max-width: calc(100vw - 240px);
+}
+
+/* Page section container — each "page" of the SPA */
+.page-section {
+    display: none;               /* Hidden by default — JS shows active one */
+    animation: fadeIn 0.3s ease; /* Fade in when made visible */
+}
+.page-section.active { display: block; } /* Show only the active section */
+
+/* Page heading row with title + optional action button */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* H2 page title inside page-header */
+.page-title {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+.page-title span {
+    color: var(--accent);
+    /* Accent-coloured word in the title */
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+/* Generic card container used throughout the app                  */
+.card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.card:hover {
+    border-color: #2a2d3e;       /* Slightly brighter border on hover */
+}
+
+/* Clickable cards get a pointer cursor and stronger hover effect */
+.card-hover:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+}
+
+/* ── Feed / Post Cards ────────────────────────────────────────── */
+.feed-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 680px;            /* Feed has a comfortable reading width */
+}
+
+/* Compose new post area at the top of the feed */
+.compose-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 8px;
+}
+
+.compose-card textarea {
+    border: none;
+    background: var(--bg-elevated);
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    resize: none;
+    min-height: 80px;
+    margin-bottom: 14px;
+}
+
+/* Row of post action buttons (Image / Clip / Post) */
+.compose-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+/* Individual post card in the feed */
+.post-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;            /* Clip media to card corners */
+    transition: border-color var(--transition);
+}
+.post-card:hover { border-color: #2a2d3e; }
+
+/* Post header: avatar + username + timestamp */
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 12px;
+}
+
+/* Small circular avatar in post header */
+.post-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+}
+
+.post-author {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.post-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Post body text */
+.post-body {
+    padding: 0 20px 16px;
+    color: var(--text-primary);
+    line-height: 1.65;
+}
+
+/* Media attached to a post */
+.post-media {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;           /* Fill width, crop height */
+}
+
+.post-media-video {
+    width: 100%;
+    max-height: 400px;
+    background: #000;
+}
+
+/* ── Profile Page ─────────────────────────────────────────────── */
+/* Large header banner at top of profile */
+.profile-banner {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius) var(--radius) 0 0;
+    display: block;
+    background: linear-gradient(135deg, #0f1018 0%, #16181f 50%, #0a0d14 100%);
+}
+
+/* Profile info section below the banner */
+.profile-info {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 0 28px 24px;
+    margin-bottom: 24px;
+    position: relative;         /* For avatar absolute positioning */
+}
+
+/* Large circular profile avatar overlapping the banner */
+.profile-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 4px solid var(--bg-secondary); /* Border matches card background */
+    object-fit: cover;
+    margin-top: -48px;           /* Pull up to overlap the banner */
+    position: relative;
+    z-index: 1;
+}
+
+.profile-name {
+    font-size: 1.6rem;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.profile-role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* Role badge colours */
+.badge-player  { background: rgba(0,255,136,0.15); color: var(--accent); }
+.badge-coach   { background: rgba(99,102,241,0.15); color: var(--indigo); }
+.badge-manager { background: rgba(255,215,0,0.15);  color: var(--yellow); }
+
+.profile-bio {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+/* Row of profile action buttons */
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+/* Profile stats bar (posts count, rating, etc.) */
+.profile-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.profile-stat { text-align: center; }
+.profile-stat .value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+.profile-stat .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Game account stat card */
+.stat-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-card .game-name {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-card .ign {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.stat-card .rank {
+    color: var(--accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* KDA / Winrate grid inside a stat card */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.stat-item { text-align: center; }
+.stat-item .val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.stat-item .lbl {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* ── Recruitment / Offers Grid ────────────────────────────────── */
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 18px;
+}
+
+/* Individual offer card */
+.offer-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    transition: all var(--transition);
+    cursor: pointer;
+}
+.offer-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-3px);
+}
+
+.offer-team {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.offer-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.offer-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+/* Small chip/tag used on offer cards */
+.tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.tag-game    { background: rgba(99,102,241,0.15); color: var(--indigo); }
+.tag-role    { background: rgba(0,255,136,0.12);  color: var(--accent); }
+.tag-open    { background: rgba(0,255,136,0.12);  color: var(--accent); }
+.tag-closed  { background: rgba(255,71,87,0.12);  color: var(--red); }
+
+.offer-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;       /* Clamp to 3 lines with ellipsis */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.offer-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ── Rating Stars ────────────────────────────────────────────── */
+.stars {
+    display: flex;
+    gap: 3px;
+    cursor: pointer;
+}
+
+/* Each star is a Unicode character */
+.star {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    transition: color var(--transition), transform var(--transition);
+    user-select: none;           /* Prevent text selection when clicking stars */
+}
+
+.star.filled  { color: var(--yellow); }
+.star:hover   { transform: scale(1.2); } /* Scale up on hover */
+
+/* Display-only rating stars (smaller) */
+.stars-display { font-size: 0.9rem; cursor: default; }
+
+/* ── Messaging ───────────────────────────────────────────────── */
+/* Two-panel layout: list on left, messages on right */
+.messages-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 0;
+    height: calc(100vh - 120px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* Left panel: list of conversations */
+.conversations-panel {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+}
+
+.conversations-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.conversations-list {
+    flex: 1;
+    overflow-y: auto;            /* Scroll the conversation list */
+}
+
+/* Single conversation item in the list */
+.conv-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-bottom: 1px solid var(--border);
+}
+.conv-item:hover       { background: var(--bg-elevated); }
+.conv-item.active      { background: rgba(0,255,136,0.08); border-left: 3px solid var(--accent); }
+
+.conv-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.conv-info { flex: 1; overflow: hidden; } /* overflow: hidden so long names truncate */
+.conv-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;     /* Show ... when name is too long */
+}
+.conv-last-msg {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Unread message count badge */
+.conv-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
+
+/* Right panel: chat messages */
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+/* Chat header bar with username */
+.chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Scrollable messages area */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Individual message bubble */
+.message-bubble {
+    max-width: 65%;              /* Bubbles never span full width */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Messages from the current user align to the right */
+.message-bubble.mine {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+/* Messages from others align to the left */
+.message-bubble.theirs {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+/* The text bubble itself */
+.bubble-text {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    word-break: break-word;      /* Break long words to avoid overflow */
+}
+
+.message-bubble.mine .bubble-text {
+    background: var(--accent);
+    color: #000;
+    border-bottom-right-radius: 4px; /* Pointer shape for own messages */
+}
+
+.message-bubble.theirs .bubble-text {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+}
+
+/* Timestamp under each bubble */
+.bubble-time {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Message input row */
+.chat-input-row {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    background: var(--bg-secondary);
+}
+
+.chat-input-row input {
+    flex: 1;
+    background: var(--bg-input);
+    margin-bottom: 0;
+}
+
+/* ── Notifications ────────────────────────────────────────────── */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 680px;
+}
+
+/* Individual notification row */
+.notif-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: background var(--transition);
+}
+
+/* Unread notifications have a left accent border */
+.notif-item.unread {
+    border-left: 3px solid var(--accent);
+    background: rgba(0,255,136,0.04);
+}
+
+/* Notification type icon */
+.notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.notif-icon-message     { background: rgba(0,255,136,0.15); }
+.notif-icon-offer       { background: rgba(99,102,241,0.15); }
+.notif-icon-application { background: rgba(255,215,0,0.15); }
+.notif-icon-rating      { background: rgba(255,71,87,0.15); }
+.notif-icon-system      { background: rgba(255,255,255,0.08); }
+
+.notif-content { flex: 1; }
+.notif-text {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.notif-time {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 3px;
+}
+
+/* ── Modal / Dialog ───────────────────────────────────────────── */
+/* Full-screen overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;                    /* Shorthand for top/right/bottom/left: 0 */
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;               /* Above everything */
+    padding: 20px;
+    backdrop-filter: blur(4px);  /* Blur the content behind the overlay */
+    animation: fadeIn 0.2s ease;
+}
+.modal-overlay.hidden { display: none; } /* Toggle with this class */
+
+/* Modal content box */
+.modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+/* Modal top bar with title + close button */
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-title { font-size: 1.2rem; }
+
+/* × close button */
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color var(--transition);
+    padding: 4px 8px;
+}
+.modal-close:hover { color: var(--text-primary); }
+
+/* Modal body padding */
+.modal-body { padding: 24px; }
+
+/* ── Toast / Alert Notifications ─────────────────────────────── */
+/* Container anchored to the bottom-right corner */
+#toast-container {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;        /* Don't block clicks on the page */
+}
+
+/* Individual toast */
+.toast {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 0.88rem;
+    max-width: 320px;
+    box-shadow: var(--shadow);
+    animation: slideInRight 0.3s ease;
+    pointer-events: auto;
+}
+
+/* Toast colour variants */
+.toast-success { border-left: 3px solid var(--accent); }
+.toast-error   { border-left: 3px solid var(--red); }
+.toast-info    { border-left: 3px solid var(--indigo); }
+
+/* ── Utility Classes ──────────────────────────────────────────── */
+/* Flex helpers */
+.flex        { display: flex; }
+.flex-center { display: flex; align-items: center; }
+.gap-8       { gap: 8px; }
+.gap-12      { gap: 12px; }
+.gap-16      { gap: 16px; }
+
+/* Spacing */
+.mt-8  { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+
+/* Text colour utilities */
+.text-accent   { color: var(--accent); }
+.text-secondary{ color: var(--text-secondary); }
+.text-muted    { color: var(--text-muted); }
+.text-red      { color: var(--red); }
+
+/* Font size utilities */
+.text-sm  { font-size: 0.85rem; }
+.text-xs  { font-size: 0.75rem; }
+
+/* Display utilities */
+.hidden { display: none !important; }
+.block  { display: block; }
+
+/* Divider line */
+.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+}
+
+/* Application status indicators */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.status-pending  { background: rgba(255,112,67,0.15); color: var(--orange); }
+.status-accepted { background: rgba(0,255,136,0.15);  color: var(--accent); }
+.status-rejected { background: rgba(255,71,87,0.15);  color: var(--red); }
+
+/* Grid layout helpers */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+/* Loading spinner */
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);  /* Only the top segment has colour — creates spin illusion */
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 40px auto;
+}
+
+/* Empty state placeholder */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+.empty-state .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.4;
+}
+.empty-state p {
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+/* ── Scrollbar Styling (WebKit browsers) ─────────────────────── */
+::-webkit-scrollbar             { width: 6px; height: 6px; }
+::-webkit-scrollbar-track       { background: transparent; }
+::-webkit-scrollbar-thumb       { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Animations ───────────────────────────────────────────────── */
+/* Used for page transitions and card appearances */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Neon pulse animation for online/active indicators */
+@keyframes pulse-neon {
+    0%, 100% { box-shadow: 0 0 4px var(--accent); }
+    50%       { box-shadow: 0 0 12px var(--accent), 0 0 24px var(--accent-glow); }
+}
+
+/* ── Responsive Breakpoints ───────────────────────────────────── */
+
+/* Tablet — hide sidebar text, show icon only */
+@media (max-width: 900px) {
+    .sidebar { width: 64px; }           /* Collapse sidebar to icon strip */
+    .sidebar-logo span,
+    .nav-item span:not(.icon),
+    .sidebar-user .user-info { display: none; } /* Hide text labels */
+    .nav-item { justify-content: center; padding: 12px; }
+    .main-content { margin-left: 64px; max-width: calc(100vw - 64px); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Mobile — sidebar becomes bottom tab bar */
+@media (max-width: 600px) {
+    .sidebar {
+        width: 100%;
+        height: 60px;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        flex-direction: row;
+        padding: 0 8px;
+        border-right: none;
+        border-top: 1px solid var(--border);
+    }
+    .sidebar-logo, .sidebar-user { display: none; }
+    .sidebar-nav { flex-direction: row; padding: 0; align-items: center; justify-content: space-around; }
+    .nav-item { flex-direction: column; gap: 2px; font-size: 0.65rem; padding: 8px; }
+    .nav-item .icon { width: auto; font-size: 1.2rem; }
+    .main-content { margin-left: 0; padding: 16px; padding-bottom: 76px; max-width: 100vw; }
+    .messages-layout { grid-template-columns: 1fr; height: auto; }
+    .conversations-panel { height: 240px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .auth-card { padding: 32px 20px; }
+    .offers-grid { grid-template-columns: 1fr; }
+}
