@@ -14,11 +14,7 @@
 session_start(); // Start PHP session so we can track logged-in user across requests
 
 header('Content-Type: application/json');             // All responses are JSON
-if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] !== '') {
-    header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
-    header('Access-Control-Allow-Credentials: true');
-    header('Vary: Origin');
-}
+header('Access-Control-Allow-Origin: *');             // Allow requests from any origin (needed for localhost dev)
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); // Permitted HTTP methods
 header('Access-Control-Allow-Headers: Content-Type'); // Allow JSON content-type header in requests
 
@@ -30,11 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // ── Database Connection ───────────────────────────────────────────────────────
 // Inline connection (no separate db.php) so this file is self-contained
-$db_host = getenv('DB_HOST') ?: '127.0.0.1';
-$db_name = getenv('DB_NAME') ?: '';
-$db_user = getenv('DB_USER') ?: '';
-$db_pass = getenv('DB_PASS') ?: '';
-$db_port = getenv('DB_PORT') ?: '3306';
+$db_host = 'shortline.proxy.rlwy.net';
+$db_name = 'railway'; // ← FIXED
+$db_user = 'admin';
+$db_pass = 'StrongPassword123!';
+$db_port = '55088';
             
 
 try {
