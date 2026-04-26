@@ -106,6 +106,8 @@ async function handleLogin(event) {
 
     if (data.success) {
         currentUser = data.data; // Store user data globally
+        // Normalize backend id field differences across endpoints.
+        if (!currentUser.id && currentUser.user_id) currentUser.id = currentUser.user_id;
         showApp();               // Show the main application
     } else {
         errorEl.textContent = data.message;          // Show error message in form
@@ -131,6 +133,8 @@ async function handleRegister(event) {
 
     if (data.success) {
         currentUser = data.data;
+        // Normalize backend id field differences across endpoints.
+        if (!currentUser.id && currentUser.user_id) currentUser.id = currentUser.user_id;
         showApp();
     } else {
         errorEl.textContent = data.message;
@@ -1088,7 +1092,8 @@ async function openConversation(convId, username, avatarUrl) {
         area.innerHTML = '<div class="empty-state"><p>No messages yet. Say hi! 👋</p></div>';
     } else {
         area.innerHTML = msgs.map(msg => {
-            const isMine = msg.sender_id == currentUser.id; // Compare with current user's ID
+            const myUserId = currentUser?.id ?? currentUser?.user_id;
+            const isMine = msg.sender_id == myUserId; // Compare with current user's ID
             return `
                 <div class="message-bubble ${isMine ? 'mine' : 'theirs'}">
                     <div class="bubble-text">${escHtml(msg.message_text)}</div>
@@ -1358,7 +1363,7 @@ async function apiGet(route) {
     const url = `${API}?action=${encodeURIComponent(action)}${query ? '&' + query : ''}`;
 
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'same-origin' });
         return await res.json();
     } catch (err) {
         console.error('GET failed:', route, err);
@@ -1373,6 +1378,7 @@ async function apiPost(route, payload = {}) {
     try {
         const res = await fetch(`${API}?action=${encodeURIComponent(action)}`, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });

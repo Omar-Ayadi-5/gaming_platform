@@ -14,7 +14,11 @@
 session_start(); // Start PHP session so we can track logged-in user across requests
 
 header('Content-Type: application/json');             // All responses are JSON
-header('Access-Control-Allow-Origin: *');             // Allow requests from any origin (needed for localhost dev)
+if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] !== '') {
+    header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+    header('Access-Control-Allow-Credentials: true');
+    header('Vary: Origin');
+}
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); // Permitted HTTP methods
 header('Access-Control-Allow-Headers: Content-Type'); // Allow JSON content-type header in requests
 
@@ -26,11 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // ── Database Connection ───────────────────────────────────────────────────────
 // Inline connection (no separate db.php) so this file is self-contained
-$db_host = 'shortline.proxy.rlwy.net';
-$db_name = 'railway'; // ← FIXED
-$db_user = 'admin';
-$db_pass = 'StrongPassword123!';
-$db_port = '55088';
+$db_host = getenv('DB_HOST') ?: '127.0.0.1';
+$db_name = getenv('DB_NAME') ?: '';
+$db_user = getenv('DB_USER') ?: '';
+$db_pass = getenv('DB_PASS') ?: '';
+$db_port = getenv('DB_PORT') ?: '3306';
             
 
 try {
@@ -415,6 +419,7 @@ function handle_create_post(): void {
                 $pdo->rollBack();
                 respond(false, 'File type not allowed. Allowed: jpg, png, gif, webp, mp4, mov, webm');
             }
+            ensure_upload_dir('assets/uploads/posts');
             $filename  = 'post_' . $post_id . '_' . time() . '.' . $ext;        // Unique filename
             $dest      = 'assets/uploads/posts/' . $filename;                    // Destination path
             if (!move_uploaded_file($file['tmp_name'], $dest)) {                  // Move from temp to dest
@@ -627,6 +632,7 @@ function handle_upload_avatar(): void {
         respond(false, 'Avatar file size must be under 5MB.');
     }
 
+    ensure_upload_dir('assets/uploads/avatars');
     $filename = 'avatar_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext; // Unique filename per user
     $dest     = 'assets/uploads/avatars/' . $filename;
 
@@ -826,6 +832,7 @@ function handle_upload_clip(): void {
     $pid_stmt->execute([$_SESSION['user_id']]);
     $profile_id = (int)$pid_stmt->fetchColumn();
 
+    ensure_upload_dir('assets/uploads/clips');
     $filename = 'clip_' . $profile_id . '_' . time() . '.' . $ext;
     $dest     = 'assets/uploads/clips/' . $filename;
 
