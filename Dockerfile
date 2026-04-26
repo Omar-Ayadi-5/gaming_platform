@@ -1,9 +1,13 @@
-FROM php:8.2-cli
+FROM php:8.2-apache
 
-WORKDIR /app
+# Install MySQL PDO driver
+RUN docker-php-ext-install pdo pdo_mysql
 
-COPY . .
+# Enable Apache mod_rewrite (optional but good)
+RUN a2enmod rewrite
 
-EXPOSE 10000
+# Copy your app
+COPY . /var/www/html/
 
-CMD ["php", "-S", "0.0.0.0:10000"]
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
