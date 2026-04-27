@@ -16,6 +16,8 @@ let currentConvId = null;       // Currently open conversation ID in the message
 let currentConvUsername = '';  // Name of the currently open conversation user
 let currentConvAvatar = '';    // Avatar of the currently open conversation user
 let feedOffset    = 0;          // How many posts have been loaded (for pagination)
+let feedLoading   = false;      // Prevent overlapping feed requests
+let feedRequestId = 0;          // Ignore stale async feed responses
 let selectedRating = 0;         // Currently selected star rating in the rating modal
 let notifPollTimer = null;      // Holds the setInterval handle for notification polling
 
@@ -243,55 +245,92 @@ async function loadDashboard() {
 
 /** loadFeed() — Fetch and render posts from the global timeline */
 async function loadFeed(reset = false) {
+    if (feedLoading) return;
+
+    feedLoading = true;
+    const requestId = ++feedRequestId;
+    const feedPostsEl = document.getElementById('feed-posts');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+
     if (reset) {
         feedOffset = 0; // Reset pagination counter
-        document.getElementById('feed-posts').innerHTML = '<div class="spinner"></div>';
+        if (feedPostsEl) feedPostsEl.innerHTML = '<div class="spinner"></div>';
     }
 
     // Show/hide compose card and attachment button based on role
+    const composeCard = document.getElementById('compose-card');
     const composeType = document.getElementById('compose-type');
     const attachLabel = document.getElementById('attach-label');
+    const composeMedia = document.getElementById('compose-media');
 
-    // Listen for post type changes to show/hide file attachment
-    composeType.onchange = () => {
+    // Managers can browse feed, but should not see the post composer.
+    if (composeCard && currentUser) {
+        composeCard.style.display = currentUser.role === 'MANAGER' ? 'none' : 'block';
+    }
+
+    // Listen for post type changes to show/hide file attachment.
+    // Also run once now so the UI state is always correct on first render.
+    const updateAttachVisibility = () => {
         const needsMedia = composeType.value !== 'TEXT';
         attachLabel.style.display = needsMedia ? 'flex' : 'none';
+        if (!needsMedia && composeMedia) composeMedia.value = '';
     };
-
-    const data = await apiGet(`feed/get&limit=20&offset=${feedOffset}`);
-
-    if (!data.success) {
-        document.getElementById('feed-posts').innerHTML = '<p class="text-muted">Could not load feed.</p>';
-        return;
+    if (composeType && attachLabel) {
+        composeType.onchange = updateAttachVisibility;
+        updateAttachVisibility();
     }
 
-    const posts = data.data;
+    if (loadMoreBtn) loadMoreBtn.disabled = true;
 
-    if (reset) {
-        document.getElementById('feed-posts').innerHTML = ''; // Clear spinner
-    }
+    try {
+        const data = await apiGet(`feed/get&limit=20&offset=${feedOffset}`);
 
-    if (posts.length === 0 && reset) {
-        document.getElementById('feed-posts').innerHTML = `
+        // Ignore old responses from previous in-flight requests.
+        if (requestId !== feedRequestId) return;
+
+        if (!data.success) {
+            if (feedPostsEl) feedPostsEl.innerHTML = '<p class="text-muted">Could not load feed.</p>';
+            return;
+        }
+
+        const posts = Array.isArray(data.data) ? data.data : [];
+
+        if (reset && feedPostsEl) {
+            feedPostsEl.innerHTML = ''; // Clear spinner
+        }
+
+        if (posts.length === 0 && reset && feedPostsEl) {
+            feedPostsEl.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">📰</div>
                 <p>No posts yet. Be the first to share something!</p>
             </div>`;
-        return;
+            return;
+        }
+
+        // Render each post card
+        if (feedPostsEl) {
+            posts.forEach(post => {
+                const el = document.createElement('div');
+                el.className = 'post-card';
+                el.innerHTML = renderPost(post); // Build HTML string
+                feedPostsEl.appendChild(el);
+            });
+        }
+
+        feedOffset += posts.length; // Advance the pagination offset
+
+        // Show "Load more" button if we got a full page of results
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = posts.length === 20 ? 'block' : 'none';
+        }
+    } finally {
+        // Only unlock when this is the latest request.
+        if (requestId === feedRequestId) {
+            feedLoading = false;
+            if (loadMoreBtn) loadMoreBtn.disabled = false;
+        }
     }
-
-    // Render each post card
-    posts.forEach(post => {
-        const el = document.createElement('div');
-        el.className = 'post-card';
-        el.innerHTML = renderPost(post); // Build HTML string
-        document.getElementById('feed-posts').appendChild(el);
-    });
-
-    feedOffset += posts.length; // Advance the pagination offset
-
-    // Show "Load more" button if we got a full page of results
-    document.getElementById('load-more-btn').style.display = posts.length === 20 ? 'block' : 'none';
 }
 
 /** loadMorePosts() — Load the next page of posts */
