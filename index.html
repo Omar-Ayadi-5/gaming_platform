@@ -1,13 +1,5 @@
 <!DOCTYPE html>
-<!-- ================================================================
-     FILE: index.html
-     PURPOSE: Single-page application (SPA) shell for the Esports Platform.
-              All "pages" exist as <section> elements hidden/shown by JS.
-              No PHP logic here — this is purely the frontend structure.
-     LINKED TO: style.css (all visual styles)
-                script.js (all SPA navigation, data fetching, DOM updates)
-                api.php   (all data calls go here via fetch())
-     ================================================================ -->
+
 <html lang="en">
 <head>
     <!-- Character encoding — must be first meta tag for proper Unicode support -->
@@ -17,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Browser tab title -->
-    <title>GGNexus — Esports Talent Platform</title>
+    <title>ProScout.GG — Esports Talent Platform</title>
 
     <!-- Favicon using an emoji for simplicity -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
@@ -38,7 +30,7 @@
 
         <!-- Brand Logo -->
         <div class="auth-logo">
-            <h1>🎮 GGNexus</h1>
+            <h1>🎮 ProScout</h1>
             <p>Find your team. Build your legacy.</p>
         </div>
 
@@ -66,7 +58,7 @@
             <p id="login-error" class="text-red text-sm mb-16 hidden"></p>
 
             <button type="submit" class="btn btn-primary btn-full">
-                🚀 Enter the Arena
+                 Enter the Scene
             </button>
 
             <!-- Demo credentials hint for testing -->
@@ -131,7 +123,7 @@
 
         <!-- Brand name -->
         <div class="sidebar-logo">
-            <span>🎮 GGNexus</span>
+            <span>🎮 ProScout</span>
         </div>
 
         <!-- Navigation items — each calls navigateTo('sectionId') in JS -->
@@ -242,7 +234,7 @@
         <section id="section-feed" class="page-section">
 
             <div class="page-header">
-                <h2 class="page-title">The <span>Feed</span></h2>
+                <h2 class="page-title"><span>Feed</span></h2>
             </div>
 
             <div class="feed-grid">
@@ -408,7 +400,7 @@
 
 
         <!-- ============================================================
-        <!-- ============================================================
+         ============================================================
              SECTION: Find Players
              Search/scout player profiles by game, region, role, and rating.
              ============================================================ -->
@@ -449,7 +441,9 @@
 
         </section><!-- /#section-players -->
 
-             
+             <!--SECTION: Recruitment
+             Browse team offers (all roles) / Create offers (managers only).
+             ============================================================ -->
         <section id="section-recruitment" class="page-section">
 
             <div class="page-header">
@@ -924,6 +918,47 @@
      Loaded last so all DOM elements exist when the script runs.
      defer attribute would also work but src approach keeps files separate.
      ================================================================ -->
+<!-- ── Modal: Report User ───────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modal-report-user">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">🚩 Report User</h3>
+            <button class="modal-close" onclick="closeModal('modal-report-user')">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="report-target-id">
+            <p class="text-secondary text-sm mb-16">
+                Reporting: <strong id="report-target-name" style="color:var(--text-primary)">—</strong>
+            </p>
+            <div class="form-group">
+                <label>Reason for report</label>
+                <select id="report-reason">
+                    <option value="">— Select a reason —</option>
+                    <option value="Harassment in messages">💬 Harassment / Threatening messages</option>
+                    <option value="Spam posts on feed">📢 Spam or repeated posts</option>
+                    <option value="Toxic behaviour in chat">🤬 Toxic or abusive behaviour</option>
+                    <option value="Fake performance stats">📊 Fake / fraudulent stats</option>
+                    <option value="Impersonation">🎭 Impersonating another user</option>
+                    <option value="Inappropriate profile bio">🚫 Inappropriate profile content</option>
+                    <option value="Other">📌 Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Additional details (optional)</label>
+                <textarea id="report-details" placeholder="Describe the issue in more detail…" style="min-height:100px"></textarea>
+            </div>
+            <p id="report-error" class="text-red text-sm mb-16 hidden">Please select a reason before submitting.</p>
+            <div class="flex gap-8" style="justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeModal('modal-report-user')">Cancel</button>
+                <button class="btn btn-danger" onclick="submitReport()">🚩 Submit Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification container for report feedback -->
+<div id="report-toast-container"></div>
+
 <script src="script.js"></script>
 
 </body>

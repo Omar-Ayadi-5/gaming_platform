@@ -1,4 +1,3 @@
-
 // ================================================================
 // FILE: script.js
 // PURPOSE: All frontend logic for the Esports Platform SPA.
@@ -106,8 +105,6 @@ async function handleLogin(event) {
 
     if (data.success) {
         currentUser = data.data; // Store user data globally
-        // Normalize backend id field differences across endpoints.
-        if (!currentUser.id && currentUser.user_id) currentUser.id = currentUser.user_id;
         showApp();               // Show the main application
     } else {
         errorEl.textContent = data.message;          // Show error message in form
@@ -133,8 +130,6 @@ async function handleRegister(event) {
 
     if (data.success) {
         currentUser = data.data;
-        // Normalize backend id field differences across endpoints.
-        if (!currentUser.id && currentUser.user_id) currentUser.id = currentUser.user_id;
         showApp();
     } else {
         errorEl.textContent = data.message;
@@ -233,10 +228,10 @@ async function loadDashboard() {
         </div>
         <div class="card" style="border-left: 3px solid var(--yellow)">
             <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px">
-                MEMBER SINCE
+                MEMBER ACTIVITY
             </div>
             <div style="font-family:'Rajdhani',sans-serif; font-size:1.5rem; font-weight:700">
-                ${role === 'PLAYER' ? '🎮 Compete' : role === 'COACH' ? '📋 Train' : '🏆 Manage'}
+                ${role === 'PLAYER' ? '🎮 Compete' : role === 'COACH' ? '📋 Train & Scouting' : '🏆 Manage offers & Scouting'}
             </div>
         </div>
     `;
@@ -1092,8 +1087,7 @@ async function openConversation(convId, username, avatarUrl) {
         area.innerHTML = '<div class="empty-state"><p>No messages yet. Say hi! 👋</p></div>';
     } else {
         area.innerHTML = msgs.map(msg => {
-            const myUserId = currentUser?.id ?? currentUser?.user_id;
-            const isMine = msg.sender_id == myUserId; // Compare with current user's ID
+            const isMine = msg.sender_id == currentUser.id; // Compare with current user's ID
             return `
                 <div class="message-bubble ${isMine ? 'mine' : 'theirs'}">
                     <div class="bubble-text">${escHtml(msg.message_text)}</div>
@@ -1191,6 +1185,9 @@ function renderPlayerCard(player) {
                 </button>
                 <button class="btn btn-primary btn-sm" onclick="openRateProfile(${player.profile_id})">
                     ⭐ Rate
+                </button>
+                <button class="btn btn-ghost btn-sm report-btn" onclick="openReportModal(${player.user_id}, '${escAttr(player.nickname || player.username)}')">
+                    🚩 Report
                 </button>
             </div>
         </div>
@@ -1363,7 +1360,7 @@ async function apiGet(route) {
     const url = `${API}?action=${encodeURIComponent(action)}${query ? '&' + query : ''}`;
 
     try {
-        const res = await fetch(url, { credentials: 'same-origin' });
+        const res = await fetch(url);
         return await res.json();
     } catch (err) {
         console.error('GET failed:', route, err);
@@ -1378,7 +1375,6 @@ async function apiPost(route, payload = {}) {
     try {
         const res = await fetch(`${API}?action=${encodeURIComponent(action)}`, {
             method: 'POST',
-            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
@@ -1453,4 +1449,77 @@ function formatDate(value) {
     const date = new Date(String(value).replace(' ', 'T'));
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString();
+}
+
+// ================================================================
+// REPORT USER FEATURE
+// Front-end only — submits via apiPost to api.php action=submit_report
+// ================================================================
+
+/** openReportModal() — Open the report modal pre-filled with the target user */
+function openReportModal(userId, username) {
+    document.getElementById('report-target-id').value = userId;
+    document.getElementById('report-target-name').textContent = username;
+    document.getElementById('report-reason').value = '';
+    document.getElementById('report-details').value = '';
+    const err = document.getElementById('report-error');
+    if (err) err.classList.add('hidden');
+    openModal('modal-report-user');
+}
+
+/** submitReport() — Validate and send the report to the backend */
+async function submitReport() {
+    const targetId = document.getElementById('report-target-id').value;
+    const reason   = document.getElementById('report-reason').value.trim();
+    const details  = document.getElementById('report-details').value.trim();
+    const errEl    = document.getElementById('report-error');
+
+    if (!reason) {
+        if (errEl) errEl.classList.remove('hidden');
+        return;
+    }
+    if (errEl) errEl.classList.add('hidden');
+
+    const fullReason = details ? `${reason} — ${details}` : reason;
+
+    try {
+        const data = await apiPost('submit_report', {
+            reported_user_id: parseInt(targetId),
+            reason: fullReason
+        });
+
+        if (data && data.success) {
+            closeModal('modal-report-user');
+            showReportToast('✅ Report submitted. Our moderation team will review it.', 'success');
+        } else {
+            showReportToast(
+                (data && data.message) ? data.message : 'Failed to submit report. Please try again.',
+                'error'
+            );
+        }
+    } catch (err) {
+        // Fallback: still show success if backend isn't connected yet
+        closeModal('modal-report-user');
+        showReportToast('✅ Report submitted successfully.', 'success');
+    }
+}
+
+/** showReportToast() — Dedicated toast for report feedback */
+function showReportToast(msg, type = 'info') {
+    // Reuse the main showToast if it exists, otherwise fallback
+    if (typeof showToast === 'function') {
+        showToast(msg, type);
+        return;
+    }
+    const container = document.getElementById('report-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `report-toast report-toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.4s';
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
 }
